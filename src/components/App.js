@@ -1,11 +1,16 @@
 import { getReviews } from "../api";
 import ReviewList from "./ReviewList";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const LIMIT = 6;
 
 function App() {
   const [items, setItems] = useState([]);
-  const [order, setOrder] = useState(["createdAt"]);
-  const sortedItems = items.sort((a, b) => b[order] - a[order]);
+  const [{ order }, setOrder] = useState(["createdAt"]);
+  const [offset, setOffset] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+
+  const sortedItems = items.sort((a, b) => b[{ order }] - a[{ order }]);
 
   const handleNewestClick = () => setOrder("createdAt");
   const handleBestClick = () => setOrder("rating");
@@ -15,17 +20,33 @@ function App() {
     setItems(nextItems);
   };
 
-  const handleLoadClick = async () => {
-    const { reviews } = await getReviews();
-    setItems(reviews);
+  const handleLoad = async (options) => {
+    const { reviews, paging } = await getReviews(options);
+    if (options.offset === 0) {
+      setItems(reviews);
+    } else {
+      setItems([...items, ...reviews]);
+    }
+    setOffset(options.offset + reviews.length);
+    setHasNext(paging.hasNext);
   };
+
+  const handleLoadmore = () => {
+    handleLoad({ order, offset, limit: LIMIT });
+  };
+
+  useEffect(() => {
+    handleLoad({ order, offset: 0, limit: LIMIT });
+  }, [order]);
 
   return (
     <div>
-      <button onClick={handleNewestClick}>Newest</button>
-      <button onClick={handleBestClick}>Best</button>
+      <div>
+        <button onClick={handleNewestClick}>Newest</button>
+        <button onClick={handleBestClick}>Best</button>
+      </div>
       <ReviewList items={sortedItems} onDelete={handleDelete} />
-      <button onClick={handleLoadClick}>Load</button>
+      {hasNext && <button onClick={handleLoadmore}>More</button>}
     </div>
   );
 }
