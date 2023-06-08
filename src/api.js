@@ -1,9 +1,24 @@
+const BASE_URL = "https://learn.codeit.kr/api";
+
 export async function getReviews({ order = "createdAt", offset = 0, limit = 6 }) {
   const query = `order=${order}&offset=${offset}&limit=S{limit}`;
-  const response = await fetch(`https://learn.codeit.kr/api/film-reviews?${query}`);
+  const response = await fetch(`${BASE_URL}/film-reviews?${query}`);
 
   if (!response.ok) {
     throw new Error("Fail to load");
+  }
+  const body = await response.json();
+  return body;
+}
+
+export async function createReview(formData) {
+  const response = await fetch(`${BASE_URL}/film-reviews`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Fail to Add Review");
   }
   const body = await response.json();
   return body;

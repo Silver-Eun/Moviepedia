@@ -18,16 +18,21 @@ function FileInput({ name, value, onChange }) {
   };
 
   useEffect(() => {
-    if (value) return;
+    if (!value) return;
 
     const nextPreview = URL.createObjectURL(value);
     setPreview(nextPreview);
+
+    return () => {
+      setPreview();
+      URL.revokeObjectURL(nextPreview);
+    };
   }, [value]);
 
   return (
     <div>
       <img src={preview} alt="" />
-      <input type="file" onChange={handleChange} ref={inputRef} />
+      <input type="file" accept="image/png, image/jpeg" onChange={handleChange} ref={inputRef} />
       {value && <button onClick={handleClearClick}>X</button>}
     </div>
   );
