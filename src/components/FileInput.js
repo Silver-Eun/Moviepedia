@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-function FileInput({ name, value, onChange }) {
-  const [preview, setPreview] = useState();
-
+function FileInput({ name, value, initialPreview, onChange }) {
+  const [preview, setPreview] = useState(initialPreview);
   const inputRef = useRef();
+
   const handleChange = (e) => {
     const nextValue = e.target.files[0];
     onChange(name, nextValue);
@@ -24,10 +24,10 @@ function FileInput({ name, value, onChange }) {
     setPreview(nextPreview);
 
     return () => {
-      setPreview();
+      setPreview(initialPreview);
       URL.revokeObjectURL(nextPreview);
     };
-  }, [value]);
+  }, [value, initialPreview]);
 
   return (
     <div>

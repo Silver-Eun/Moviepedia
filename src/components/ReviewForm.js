@@ -10,10 +10,10 @@ const INITIAL_VALUES = {
   imgFile: null,
 };
 
-function ReviewForm() {
+function ReviewForm({ initialValues = INITIAL_VALUES, initialPreview, onSubmitSuccess, onCancel }) {
+  const [values, setValues] = useState(initialValues);
   const [isSubmitting, setIsSubmiting] = useState(false);
   const [submittingError, setSubmttingError] = useState(null);
-  const [values, setValues] = useState(INITIAL_VALUES);
 
   const handleChange = (name, value) => {
     setValues((preValues) => ({
@@ -29,28 +29,36 @@ function ReviewForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("rating", values.rating);
     formData.append("content", values.content);
     formData.append("imgFile", values.imgFile);
+
+    let result;
     try {
       setSubmttingError(null);
       setIsSubmiting(true);
-      await createReview(formData);
-    } catch {
+      result = await createReview(formData);
+    } catch (error) {
       setSubmttingError(Error);
+      return;
     } finally {
       setIsSubmiting(false);
     }
+    const { review } = result;
+    onSubmitSuccess(review);
     setValues(INITIAL_VALUES);
   };
+
   return (
     <form className="ReviewForm" onSubmit={handleSubmit}>
-      <FileInput name="imgFile" value={values.imgFile} onChange={handleChange} />
+      <FileInput name="imgFile" value={values.imgFile} initialPreview={initialPreview} onChange={handleChange} />
       <input name="title" value={values.title} onChange={handleInputChange} />
       <RatingInput name="rating" value={values.rating} onChange={handleChange} />
       <textarea name="content" value={values.content} onChange={handleInputChange} />
+      {onCancel && <button onClick={onCancel}>Cancel</button>}
       <button type="submit" disabled={isSubmitting}>
         Submit
       </button>

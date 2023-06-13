@@ -7,7 +7,7 @@ const LIMIT = 6;
 
 function App() {
   const [items, setItems] = useState([]);
-  const [{ order }, setOrder] = useState(["createdAt"]);
+  const [order, setOrder] = useState(["createdAt"]);
   const [offset, setOffset] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +49,10 @@ function App() {
     handleLoad({ order, offset, limit: LIMIT });
   };
 
+  const handleSubmitSuccess = (review) => {
+    setItems((prevItems) => [review, ...prevItems]);
+  };
+
   useEffect(() => {
     handleLoad({ order, offset: 0, limit: LIMIT });
   }, [order]);
@@ -59,7 +63,7 @@ function App() {
         <button onClick={handleNewestClick}>Newest</button>
         <button onClick={handleBestClick}>Best</button>
       </div>
-      <ReviewForm />
+      <ReviewForm onSubmitSuccess={handleSubmitSuccess} />
       <ReviewList items={sortedItems} onDelete={handleDelete} />
       {hasNext && (
         <button disabled={isLoading} onClick={handleLoadmore}>
