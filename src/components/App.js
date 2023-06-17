@@ -1,4 +1,4 @@
-import { getReviews } from "../api";
+import { createReview, getReviews, updateReview } from "../api";
 import ReviewForm from "./ReviewForm";
 import ReviewList from "./ReviewList";
 import { useEffect, useState } from "react";
@@ -49,8 +49,15 @@ function App() {
     handleLoad({ order, offset, limit: LIMIT });
   };
 
-  const handleSubmitSuccess = (review) => {
+  const handleCreateSuccess = (review) => {
     setItems((prevItems) => [review, ...prevItems]);
+  };
+
+  const handleUpdateSuccess = (review) => {
+    setItems((prevItems) => {
+      const splitIdx = prevItems.findIndex((item) => item.id === review.id);
+      return [...prevItems.slice(0, splitIdx), review, ...prevItems.slice(splitIdx + 1)];
+    });
   };
 
   useEffect(() => {
@@ -63,8 +70,8 @@ function App() {
         <button onClick={handleNewestClick}>Newest</button>
         <button onClick={handleBestClick}>Best</button>
       </div>
-      <ReviewForm onSubmitSuccess={handleSubmitSuccess} />
-      <ReviewList items={sortedItems} onDelete={handleDelete} />
+      <ReviewForm onSubmit={createReview} onSubmitSuccess={handleCreateSuccess} />
+      <ReviewList items={sortedItems} onDelete={handleDelete} onUpdate={updateReview} onUpdateSuccess={handleUpdateSuccess} />
       {hasNext && (
         <button disabled={isLoading} onClick={handleLoadmore}>
           More

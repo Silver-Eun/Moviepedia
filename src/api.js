@@ -23,3 +23,16 @@ export async function createReview(formData) {
   const body = await response.json();
   return body;
 }
+
+export async function updateReview(id, formData) {
+  const response = await fetch(`${BASE_URL}/film-reviews/${id}`, {
+    method: "PUT",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Fail to Edit Review");
+  }
+  const body = await response.json();
+  return body;
+}
