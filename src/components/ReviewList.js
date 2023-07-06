@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Rating from "./Rating";
 import ReviewForm from "./ReviewForm";
+import useTranslate from "./hooks/useTranslate";
+import "./ReviewList.css";
 
 function formatDate(value) {
   const date = new Date(value);
@@ -8,6 +10,8 @@ function formatDate(value) {
 }
 
 function ReviewListItem({ item, onDelte, onEdit }) {
+  const t = useTranslate();
+
   const handleDeleteClick = () => {
     onDelte(item.id);
   };
@@ -24,8 +28,8 @@ function ReviewListItem({ item, onDelte, onEdit }) {
         <Rating value={item.rating} />
         <p>{formatDate(item.createdAt)}</p>
         <p>{item.content}</p>
-        <button onClick={handleDeleteClick}>Delete</button>
-        <button onClick={handleEditClick}>Edit</button>
+        <button onClick={handleEditClick}>{t("edit button")}</button>
+        <button onClick={handleDeleteClick}>{t("delete button")}</button>
       </div>
     </div>
   );

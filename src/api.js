@@ -36,3 +36,15 @@ export async function updateReview(id, formData) {
   const body = await response.json();
   return body;
 }
+
+export async function deleteReview(id) {
+  const response = await fetch(`${BASE_URL}/film-reviews/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Fail to Delete Review");
+  }
+  const body = await response.json();
+  return body;
+}

@@ -1,49 +1,48 @@
-import { createReview, getReviews, updateReview } from "../api";
+import { createReview, deleteReview, getReviews, updateReview } from "../api";
 import ReviewForm from "./ReviewForm";
 import ReviewList from "./ReviewList";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import useAsync from "./hooks/useAsync";
+import { LocaleProvider } from "../contexts/LocaleContext";
+import LocaleSelect from "./LocaleSelect";
+import "./App.css";
 
 const LIMIT = 6;
 
 function App() {
-  const [items, setItems] = useState([]);
   const [order, setOrder] = useState(["createdAt"]);
   const [offset, setOffset] = useState(0);
   const [hasNext, setHasNext] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingError, setLoadingError] = useState(null);
-
+  const [isLoading, loadingError, getReviewsAsync] = useAsync(getReviews);
+  const [items, setItems] = useState([]);
   const sortedItems = items.sort((a, b) => b[{ order }] - a[{ order }]);
 
   const handleNewestClick = () => setOrder("createdAt");
   const handleBestClick = () => setOrder("rating");
 
-  const handleDelete = (id) => {
-    const nextItems = items.filter((item) => item.id !== id);
-    setItems(nextItems);
+  const handleDelete = async (id) => {
+    const result = await deleteReview(id);
+    if (!result) return;
+
+    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
-  const handleLoad = async (options) => {
-    let result;
-    try {
-      setIsLoading(true);
-      setLoadingError(null);
-      result = await getReviews(options);
-    } catch (error) {
-      setLoadingError(error);
-      return;
-    } finally {
-      setIsLoading(false);
-    }
-    const { paging, reviews } = result;
-    if (options.offset === 0) {
-      setItems(reviews);
-    } else {
-      setItems([...items, ...reviews]);
-    }
-    setOffset(options.offset + reviews.length);
-    setHasNext(paging.hasNext);
-  };
+  const handleLoad = useCallback(
+    async (options) => {
+      const result = await getReviewsAsync(options);
+      if (!result) return;
+
+      const { paging, reviews } = result;
+      if (options.offset === 0) {
+        setItems(reviews);
+      } else {
+        setItems((prevItems) => [...prevItems, ...reviews]);
+      }
+      setOffset(options.offset + options.limit);
+      setHasNext(paging.hasNext);
+    },
+    [getReviewsAsync]
+  );
 
   const handleLoadmore = () => {
     handleLoad({ order, offset, limit: LIMIT });
@@ -62,23 +61,26 @@ function App() {
 
   useEffect(() => {
     handleLoad({ order, offset: 0, limit: LIMIT });
-  }, [order]);
+  }, [order, handleLoad]);
 
   return (
-    <div>
+    <LocaleProvider defaultValue={"ko"}>
       <div>
-        <button onClick={handleNewestClick}>Newest</button>
-        <button onClick={handleBestClick}>Best</button>
+        <LocaleSelect />
+        <div>
+          <button onClick={handleNewestClick}>Newest</button>
+          <button onClick={handleBestClick}>Best</button>
+        </div>
+        <ReviewForm onSubmit={createReview} onSubmitSuccess={handleCreateSuccess} />
+        <ReviewList items={sortedItems} onDelete={handleDelete} onUpdate={updateReview} onUpdateSuccess={handleUpdateSuccess} />
+        {hasNext && (
+          <button disabled={isLoading} onClick={handleLoadmore}>
+            More
+          </button>
+        )}
+        {loadingError?.message && <span>{loadingError.message}</span>}
       </div>
-      <ReviewForm onSubmit={createReview} onSubmitSuccess={handleCreateSuccess} />
-      <ReviewList items={sortedItems} onDelete={handleDelete} onUpdate={updateReview} onUpdateSuccess={handleUpdateSuccess} />
-      {hasNext && (
-        <button disabled={isLoading} onClick={handleLoadmore}>
-          More
-        </button>
-      )}
-      {loadingError?.message && <span>{loadingError.message}</span>}
-    </div>
+    </LocaleProvider>
   );
 }
 

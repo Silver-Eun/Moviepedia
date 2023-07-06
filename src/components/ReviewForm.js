@@ -1,6 +1,9 @@
 import { useState } from "react";
 import FileInput from "./FileInput";
 import RatingInput from "./RatingInput";
+import useAsync from "./hooks/useAsync";
+import useTranslate from "./hooks/useTranslate";
+import "./ReviewForm.css";
 
 const INITIAL_VALUES = {
   title: "",
@@ -10,9 +13,9 @@ const INITIAL_VALUES = {
 };
 
 function ReviewForm({ initialValues = INITIAL_VALUES, initialPreview, onSubmitSuccess, onSubmit, onCancel }) {
+  const t = useTranslate();
   const [values, setValues] = useState(initialValues);
-  const [isSubmitting, setIsSubmiting] = useState(false);
-  const [submittingError, setSubmttingError] = useState(null);
+  const [isSubmitting, submittingError, onSubmitAsync] = useAsync(onSubmit);
 
   const handleChange = (name, value) => {
     setValues((preValues) => ({
@@ -35,17 +38,9 @@ function ReviewForm({ initialValues = INITIAL_VALUES, initialPreview, onSubmitSu
     formData.append("content", values.content);
     formData.append("imgFile", values.imgFile);
 
-    let result;
-    try {
-      setSubmttingError(null);
-      setIsSubmiting(true);
-      result = await onSubmit(formData);
-    } catch (error) {
-      setSubmttingError(Error);
-      return;
-    } finally {
-      setIsSubmiting(false);
-    }
+    let result = await onSubmitAsync(formData);
+    if (!result) return;
+
     const { review } = result;
     onSubmitSuccess(review);
     setValues(INITIAL_VALUES);
@@ -57,9 +52,9 @@ function ReviewForm({ initialValues = INITIAL_VALUES, initialPreview, onSubmitSu
       <input name="title" value={values.title} onChange={handleInputChange} />
       <RatingInput name="rating" value={values.rating} onChange={handleChange} />
       <textarea name="content" value={values.content} onChange={handleInputChange} />
-      {onCancel && <button onClick={onCancel}>Cancel</button>}
+      {onCancel && <button onClick={onCancel}>{t("cancel button")}</button>}
       <button type="submit" disabled={isSubmitting}>
-        Submit
+        {t("confirm button")}
       </button>
       {submittingError?.message && <div>{submittingError.message}</div>}
     </form>
